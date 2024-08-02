@@ -1,39 +1,38 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-    class MarkDownBlog extends Model {
+    class comment extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
          * The `models/index` file will call this method automatically.
          */
         static associate(models) {
-            MarkDownBlog.hasMany(models.comment, {
+            // define association here
+            comment.belongsTo(models.MarkDownBlog, {
                 foreignKey: "blogId",
+            });
+            comment.belongsTo(models.User, {
+                foreignKey: "userId",
             });
         }
     }
-    MarkDownBlog.init(
+    comment.init(
         {
             id: {
                 type: DataTypes.INTEGER,
                 autoIncrement: true,
                 primaryKey: true,
             },
-            title: DataTypes.TEXT,
-            description: DataTypes.TEXT,
-            contentHTML: DataTypes.TEXT("long"),
-            contentMarkdown: DataTypes.TEXT("long"),
-            urlImageBanner: DataTypes.TEXT,
-            view: {
-                type: DataTypes.INTEGER,
-                defaultValue: 0,
-            },
+            blogId: DataTypes.INTEGER,
+            userId: DataTypes.INTEGER,
+            commentText: DataTypes.TEXT,
+            parentCommentId: DataTypes.INTEGER,
         },
         {
             sequelize,
-            modelName: "MarkDownBlog",
+            modelName: "comment",
         }
     );
-    return MarkDownBlog;
+    return comment;
 };

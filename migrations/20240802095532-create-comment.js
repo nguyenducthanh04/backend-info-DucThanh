@@ -2,36 +2,34 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("MarkDownBlogs", {
+        await queryInterface.createTable("comments", {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
             },
-            title: {
-                allowNull: false,
-                type: Sequelize.TEXT,
-            },
-            description: {
-                allowNull: false,
-                type: Sequelize.TEXT,
-            },
-            contentHTML: {
-                allowNull: false,
-                type: Sequelize.TEXT("long"),
-            },
-            contentMarkdown: {
-                allowNull: false,
-                type: Sequelize.TEXT("long"),
-            },
-            urlImageBanner: {
-                allowNull: false,
-                type: Sequelize.TEXT,
-            },
-            view: {
+            blogId: {
                 type: Sequelize.INTEGER,
-                defaultValue: 0,
+                references: {
+                    model: "MarkDownBlogs",
+                    key: "id",
+                },
+                onDelete: "CASCADE",
+            },
+            userId: {
+                type: Sequelize.INTEGER,
+                references: {
+                    model: "Users",
+                    key: "id",
+                },
+                onDelete: "CASCADE",
+            },
+            commentText: {
+                type: Sequelize.TEXT,
+            },
+            parentCommentId: {
+                type: Sequelize.INTEGER,
             },
             createdAt: {
                 allowNull: false,
@@ -44,6 +42,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("MarkDownBlogs");
+        await queryInterface.dropTable("comments");
     },
 };

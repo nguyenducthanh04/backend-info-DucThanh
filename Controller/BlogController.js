@@ -1,4 +1,8 @@
 const model = require("../models/index");
+const { sequelize } = require("../models");
+const { Op } = require("sequelize");
+const User = model.User;
+const Comment = model.comment;
 const MarkDownBlog = model.MarkDownBlog;
 class BlogController {
     async getAllBlog(req, res) {
@@ -17,7 +21,6 @@ class BlogController {
     async createBlog(req, res) {
         const { title, description, urlImageBanner, contentMD, contentHTML } =
             req.body;
-        console.log("dcu nodejs: ", req.body);
         const newBlog = await MarkDownBlog.create({
             title: title,
             description: description,
@@ -26,6 +29,94 @@ class BlogController {
             contentMarkdown: contentMD,
         });
         res.json(newBlog);
+    }
+    async incrementView(req, res) {
+        const { title } = req.params;
+
+        try {
+            // Tìm bài blog theo tiêu đề
+            const blog = await MarkDownBlog.findOne({ where: { title } });
+
+            if (!blog) {
+                return res.status(404).json({ message: "Blog not found" });
+            }
+
+            // Tăng số lượt xem
+            blog.view += 1;
+            await blog.save();
+
+            res.status(200).json({ message: "View count incremented" });
+        } catch (error) {
+            console.error("Error incrementing view count:", error);
+            res.status(500).json({ message: "Server error" });
+        }
+    }
+    async addComment(req, res) {
+        const { blogId, userId, commentText, parentCommentId } = req.body;
+        const newComment = await Comment.create({
+            blogId: blogId,
+            userId: userId,
+            commentText: commentText,
+            parentCommentId: 0,
+        });
+        res.json(newComment);
+    }
+    async repComment(req, res) {
+        const { blogId, userId, commentText, parentCommentId } = req.body;
+        const newComment = await Comment.create({
+            blogId: blogId,
+            userId: userId,
+            commentText: commentText,
+            parentCommentId: parentCommentId,
+        });
+        res.json(newComment);
+    }
+    async getCommentByBlog(req, res) {
+        const { blogId } = req.params;
+        const comments = await Comment.findAll({
+            where: {
+                blogId: blogId,
+                parentCommentId: 0,
+            },
+            include: [
+                {
+                    model: User,
+                },
+            ],
+        });
+        res.json(comments);
+    }
+    async getCommentChild(req, res) {
+        const { blogId } = req.params;
+        const commentChild = await Comment.findAll({
+            where: {
+                blogId: blogId,
+                parentCommentId: {
+                    [Op.ne]: 0,
+                },
+            },
+            include: [
+                {
+                    model: User,
+                },
+            ],
+        });
+        res.json(commentChild);
+    }
+    async editComment(req, res) {
+        const { commentId, content } = req.body;
+        const editComment = await Comment.update(
+            {
+                commentText: content,
+            },
+            {
+                where: {
+                    id: commentId,
+                },
+            }
+        );
+        console.log("content", editComment);
+        res.json(editComment);
     }
 }
 module.exports = new BlogController();
