@@ -2,8 +2,6 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const model = require("../models/index");
 const Provider = model.Provider;
 const User = model.User;
-const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
 
 module.exports = new GoogleStrategy(
     {
@@ -51,16 +49,6 @@ module.exports = new GoogleStrategy(
                 providerId: providerId,
             });
         }
-        // const payload = {
-        //     id: user.id,
-        //     username: user.username,
-        //     email: user.email,
-        //     avatar: user.avatar,
-        // };
-        // const secretKey = crypto.randomBytes(32).toString("hex");
-        // const token = jwt.sign(payload, secretKey, {
-        //     expiresIn: "1h",
-        // });
         return done(null, user);
     }
 );

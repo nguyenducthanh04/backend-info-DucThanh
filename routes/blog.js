@@ -11,5 +11,6 @@ router.get("/get-all-comment/:blogId", BlogController.getCommentByBlog);
 router.get("/get-comment-child/:blogId", BlogController.getCommentChild);
 router.post("/rep-comment", BlogController.repComment);
 router.put("/edit-comment", BlogController.editComment);
-
+router.delete("/delete-comment", BlogController.deleteComment);
+router.get("/get-comment-by-user/:userId", BlogController.getCommentByUser);
 module.exports = router;

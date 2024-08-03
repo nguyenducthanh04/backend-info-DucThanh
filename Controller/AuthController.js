@@ -15,9 +15,7 @@ class AuthController {
             token: token,
             ...userData,
         }).toString();
-        console.log("Thong tin: ", req.user);
         res.redirect(`http://localhost:3000/profile?${queryParams}`);
-        // res.redirect("/users/display");
     }
     async Logout(req, res, next) {
         req.logout(function (err) {

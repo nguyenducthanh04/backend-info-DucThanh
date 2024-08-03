@@ -32,7 +32,6 @@ class BlogController {
     }
     async incrementView(req, res) {
         const { title } = req.params;
-
         try {
             // Tìm bài blog theo tiêu đề
             const blog = await MarkDownBlog.findOne({ where: { title } });
@@ -52,7 +51,7 @@ class BlogController {
         }
     }
     async addComment(req, res) {
-        const { blogId, userId, commentText, parentCommentId } = req.body;
+        const { blogId, userId, commentText } = req.body;
         const newComment = await Comment.create({
             blogId: blogId,
             userId: userId,
@@ -115,8 +114,41 @@ class BlogController {
                 },
             }
         );
-        console.log("content", editComment);
         res.json(editComment);
+    }
+    async deleteComment(req, res) {
+        try {
+            const { commentId } = req.body;
+            if (!commentId) {
+                return res
+                    .status(400)
+                    .json({ message: "commentId is required" });
+            }
+            await Comment.destroy({ where: { id: commentId } });
+            res.json({ message: "Delete Successfully" });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "An error occurred" });
+        }
+    }
+    async getCommentByUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const commentByUser = await Comment.findAll({
+                where: {
+                    userId: userId,
+                },
+                include: [
+                    {
+                        model: MarkDownBlog,
+                    },
+                ],
+            });
+            res.json(commentByUser);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "An error occurred" });
+        }
     }
 }
 module.exports = new BlogController();
