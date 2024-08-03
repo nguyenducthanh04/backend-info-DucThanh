@@ -15,7 +15,10 @@ class AuthController {
             token: token,
             ...userData,
         }).toString();
-        res.redirect(`http://localhost:3000/profile?${queryParams}`);
+        // res.redirect(`http://localhost:3000/profile?${queryParams}`);
+        res.redirect(
+            `https://backend-info-ducthanh-2.onrender.com/profile?${queryParams}`
+        );
     }
     async Logout(req, res, next) {
         req.logout(function (err) {
