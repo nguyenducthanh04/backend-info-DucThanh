@@ -127,8 +127,20 @@ class BlogController {
     }
     async repComment(req, res) {
         try {
-            const { blogId, userId, commentText, parentCommentId } = req.body;
-            if (!blogId && !userId && !commentText && !parentCommentId) {
+            const {
+                blogId,
+                userId,
+                commentText,
+                parentCommentId,
+                emailRespondent,
+            } = req.body;
+            if (
+                !blogId &&
+                !userId &&
+                !commentText &&
+                !parentCommentId &&
+                !emailRespondent
+            ) {
                 return new BadRequestResponse().send(req, res);
             }
             const newComment = await blogActions.repComment(
@@ -137,6 +149,28 @@ class BlogController {
                 commentText,
                 parentCommentId
             );
+            const userRep = await User.findByPk(userId);
+            console.log("userRep:", userRep);
+            const myBlog = await MarkDownBlog.findByPk(blogId);
+            const transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
+                auth: {
+                    user: "dducthanh04@gmail.com",
+                    pass: "midn lcia tcly pcbn",
+                },
+            });
+
+            transporter.sendMail({
+                from: `Người nhận tin nhắn:ThanhDuc`,
+                to: `${emailRespondent}`,
+                subject: "Contact",
+                html: `<div">
+            <h3 style:"text-align: center">${userRep.username} đã trả lời bình luận của bạn ở bài viết ${myBlog.title} của bạn.: <em>${commentText}</em></h3>
+            </div>`,
+            });
+
             return new SuccessResponse().send(req, res, newComment);
         } catch (error) {
             console.error(error);
