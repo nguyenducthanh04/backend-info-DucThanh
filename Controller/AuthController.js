@@ -15,8 +15,8 @@ class AuthController {
             token: token,
             ...userData,
         }).toString();
-        res.redirect(`http://localhost:3000/profile?${queryParams}`);
-        // res.redirect(`https://info-thanhn.vercel.app/profile?${queryParams}`);
+        // res.redirect(`http://localhost:3000/profile?${queryParams}`);
+        res.redirect(`https://info-thanhn.vercel.app/profile?${queryParams}`);
     }
     async Logout(req, res, next) {
         req.logout(function (err) {

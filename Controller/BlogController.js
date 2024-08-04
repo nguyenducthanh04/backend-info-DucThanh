@@ -1,31 +1,37 @@
 const model = require("../models/index");
-const { sequelize } = require("../models");
 const { Op } = require("sequelize");
 const User = model.User;
 const Comment = model.comment;
 const MarkDownBlog = model.MarkDownBlog;
+const BlogActions = require("../actions/blog.actions");
+const {
+    SuccessResponse,
+    ErrorResponse,
+    NotFoundResponse,
+    BadRequestResponse,
+} = require("../cores/apiRes.js");
+const blogActions = require("../actions/blog.actions");
 class BlogController {
     async getAllBlog(req, res) {
         try {
-            const allBlog = await MarkDownBlog.findAll();
-            res.json(allBlog);
+            const allBlog = await BlogActions.getAllBlog();
+            return new SuccessResponse().send(req, res, allBlog);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async getBlogByTitle(req, res) {
         try {
             const { title } = req.params;
-            const blogByTitle = await MarkDownBlog.findOne({
-                where: {
-                    title: title,
-                },
-            });
-            res.json(blogByTitle);
+            if (!title) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const blogByTitle = await BlogActions.getBlogByTitle(title);
+            return new SuccessResponse().send(req, res, blogByTitle);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async createBlog(req, res) {
@@ -37,162 +43,150 @@ class BlogController {
                 contentMD,
                 contentHTML,
             } = req.body;
-            const newBlog = await MarkDownBlog.create({
-                title: title,
-                description: description,
-                urlImageBanner: urlImageBanner,
-                contentHTML: contentHTML,
-                contentMarkdown: contentMD,
-            });
-            res.json(newBlog);
+            if (
+                !title &&
+                !description &&
+                !urlImageBanner &&
+                !contentMD &&
+                !contentHTML
+            ) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const newBlog = await blogActions.createBlog(
+                title,
+                description,
+                urlImageBanner,
+                contentMD,
+                contentHTML
+            );
+            return new SuccessResponse().send(req, res, newBlog);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async incrementView(req, res) {
-        const { title } = req.params;
         try {
-            // Tìm bài blog theo tiêu đề
-            const blog = await MarkDownBlog.findOne({ where: { title } });
+            const { title } = req.params;
+            if (!title) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const blog = await blogActions.getBlogByTitle(title);
 
             if (!blog) {
-                return res.status(404).json({ message: "Blog not found" });
+                return new NotFoundResponse().send(req, res);
             }
 
-            // Tăng số lượt xem
             blog.view += 1;
             await blog.save();
 
-            res.status(200).json({ message: "View count incremented" });
+            return new SuccessResponse().send(req, res);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async addComment(req, res) {
         try {
             const { blogId, userId, commentText } = req.body;
-            const newComment = await Comment.create({
-                blogId: blogId,
-                userId: userId,
-                commentText: commentText,
-                parentCommentId: 0,
-            });
-            res.json(newComment);
+            if (!blogId && !userId && !commentText) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const newComment = await blogActions.addComment(
+                blogId,
+                userId,
+                commentText
+            );
+            return new SuccessResponse().send(req, res, newComment);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async repComment(req, res) {
         try {
             const { blogId, userId, commentText, parentCommentId } = req.body;
-            const newComment = await Comment.create({
-                blogId: blogId,
-                userId: userId,
-                commentText: commentText,
-                parentCommentId: parentCommentId,
-            });
-            res.json(newComment);
+            if (!blogId && !userId && !commentText && !parentCommentId) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const newComment = await blogActions.repComment(
+                blogId,
+                userId,
+                commentText,
+                parentCommentId
+            );
+            return new SuccessResponse().send(req, res, newComment);
         } catch (error) {
-            console.error("Error incrementing view count:", error);
-            res.status(500).json({ message: "Server error" });
+            console.error(error);
+            return new ErrorResponse().send(req, res);
         }
     }
     async getCommentByBlog(req, res) {
         try {
             const { blogId } = req.params;
-            const comments = await Comment.findAll({
-                where: {
-                    blogId: blogId,
-                    parentCommentId: 0,
-                },
-                include: [
-                    {
-                        model: User,
-                    },
-                ],
-            });
-            res.json(comments);
+            if (!blogId) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const comments = await blogActions.getCommentByBlog(blogId);
+            return new SuccessResponse().send(req, res, comments);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "An error occurred" });
+            return new ErrorResponse().send(req, res);
         }
     }
     async getCommentChild(req, res) {
         try {
             const { blogId } = req.params;
-            const commentChild = await Comment.findAll({
-                where: {
-                    blogId: blogId,
-                    parentCommentId: {
-                        [Op.ne]: 0,
-                    },
-                },
-                include: [
-                    {
-                        model: User,
-                    },
-                ],
-            });
-            res.json(commentChild);
+            if (!blogId) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const commentChild = await blogActions.getCommentChild(blogId);
+            return new SuccessResponse().send(req, res, commentChild);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "An error occurred" });
+            return new ErrorResponse().send(req, res);
         }
     }
     async editComment(req, res) {
         try {
             const { commentId, content } = req.body;
-            const editComment = await Comment.update(
-                {
-                    commentText: content,
-                },
-                {
-                    where: {
-                        id: commentId,
-                    },
-                }
+            if (!commentId && content) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const editComment = await blogActions.editComment(
+                commentId,
+                content
             );
-            res.json(editComment);
+            return new SuccessResponse().send(req, res, editComment);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "An error occurred" });
+            return new ErrorResponse().send(req, res);
         }
     }
     async deleteComment(req, res) {
         try {
             const { commentId } = req.body;
             if (!commentId) {
-                return res
-                    .status(400)
-                    .json({ message: "commentId is required" });
+                return new BadRequestResponse().send(req, res);
             }
-            await Comment.destroy({ where: { id: commentId } });
-            res.json({ message: "Delete Successfully" });
+            await blogActions.deleteComment(commentId);
+            return new SuccessResponse().send(req, res);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "An error occurred" });
+            return new ErrorResponse().send(req, res);
         }
     }
     async getCommentByUser(req, res) {
         try {
             const { userId } = req.params;
-            const commentByUser = await Comment.findAll({
-                where: {
-                    userId: userId,
-                },
-                include: [
-                    {
-                        model: MarkDownBlog,
-                    },
-                ],
-            });
-            res.json(commentByUser);
+            if (!userId) {
+                return new BadRequestResponse().send(req, res);
+            }
+            const commentByUser = await blogActions.getCommentByUser(userId);
+            return new SuccessResponse().send(req, res, commentByUser);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "An error occurred" });
+            return new ErrorResponse().send(req, res);
         }
     }
 }
