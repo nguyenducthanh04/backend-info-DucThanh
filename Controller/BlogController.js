@@ -1,5 +1,6 @@
 const model = require("../models/index");
 const { Op } = require("sequelize");
+const nodemailer = require("nodemailer");
 const User = model.User;
 const Comment = model.comment;
 const MarkDownBlog = model.MarkDownBlog;
@@ -97,6 +98,27 @@ class BlogController {
                 userId,
                 commentText
             );
+            const myBlog = await MarkDownBlog.findByPk(blogId);
+            const userComment = await User.findByPk(userId);
+            const transporter = nodemailer.createTransport({
+                host: "smtp.gmail.com",
+                port: 465,
+                secure: true,
+                auth: {
+                    user: "dducthanh04@gmail.com",
+                    pass: "midn lcia tcly pcbn",
+                },
+            });
+
+            transporter.sendMail({
+                from: `Người nhận tin nhắn:ThanhDuc`,
+                to: "dducthanh04@gmail.com",
+                subject: "Contact",
+                html: `<div">
+            <h3 style:"text-align: center">${userComment.username} đã bình luận vào bài viết ${myBlog.title} của bạn.: <em>${commentText}</em></h3>
+            </div>`,
+            });
+
             return new SuccessResponse().send(req, res, newComment);
         } catch (error) {
             console.error(error);
