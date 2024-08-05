@@ -111,12 +111,10 @@ class BlogController {
             });
 
             transporter.sendMail({
-                from: `Người nhận tin nhắn:ThanhDuc`,
+                from: `Người nhận tin nhắn: ThanhDuc`,
                 to: "dducthanh04@gmail.com",
-                subject: "Contact",
-                html: `<div">
-            <h3 style:"text-align: center">${userComment.username} đã bình luận vào bài viết ${myBlog.title} của bạn.: <em>${commentText}</em></h3>
-            </div>`,
+                subject: "Message from Info-Thanhn",
+                html: `${userComment.username} đã bình luận vào bài viết <a href="https://info-thanhn.vercel.app/blog-detail/${myBlog.title}">${myBlog.title}</a> của bạn: <em>${commentText}</em>`,
             });
 
             return new SuccessResponse().send(req, res, newComment);
