@@ -148,7 +148,6 @@ class BlogController {
                 parentCommentId
             );
             const userRep = await User.findByPk(userId);
-            console.log("userRep:", userRep);
             const myBlog = await MarkDownBlog.findByPk(blogId);
             const transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com",
@@ -164,9 +163,7 @@ class BlogController {
                 from: `Người nhận tin nhắn:ThanhDuc`,
                 to: `${emailRespondent}`,
                 subject: "Contact",
-                html: `<div">
-            <h3 style:"text-align: center">${userRep.username} đã trả lời bình luận của bạn ở bài viết ${myBlog.title} của bạn.: <em>${commentText}</em></h3>
-            </div>`,
+                html: `${userRep.username} đã trả lời bình luận của bạn ở bài viết <a href="https://info-thanhn.vercel.app/blog-detail/${myBlog.title}">${myBlog.title}</a> của bạn: <em>${commentText}</em>`,
             });
 
             return new SuccessResponse().send(req, res, newComment);
